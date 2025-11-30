@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Space | futuristic iOS Style</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 核心样式区 (不懂不要动这里) --- */
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #ffffff; overflow-x: hidden; }
+        .aurora-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.4), transparent 50%), radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.4), transparent 50%), radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.2), transparent 50%); filter: blur(60px); z-index: -1; animation: breathe 10s ease-in-out infinite alternate; }
+        @keyframes breathe { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 1; } }
+        .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05); border-radius: 24px; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .glass-panel:hover { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); transform: translateY(-5px) scale(1.01); box-shadow: 0 20px 40px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+        .ios-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.2s; }
+        .ios-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
+        .text-gradient { background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tab-content { display: none; animation: fadeIn 0.5s ease forwards; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-item.active { background: rgba(255,255,255,0.2); font-weight: 600; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        /* 简单的 Loading 动画 */
+        #loader { position: fixed; inset: 0; background: #0f172a; z-index: 100; display: flex; justify-content: center; items-center; transition: opacity 0.5s; }
+    </style>
+</head>
+<body class="min-h-screen relative p-4 md:p-8 flex flex-col items-center">
+
+    <!-- Loading Screen -->
+    <div id="loader"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>
+
+    <div class="aurora-bg"></div>
+
+    <!-- 导航栏 -->
+    <nav class="fixed top-6 z-50 glass-panel !rounded-full px-2 py-2 flex items-center space-x-1 shadow-2xl scale-90 md:scale-100">
+        <button onclick="switchTab('home')" id="nav-home" class="nav-item active px-6 py-2 rounded-full text-sm text-gray-300 transition-all hover:text-white flex items-center gap-2"><i data-lucide="layout-grid" class="w-4 h-4"></i> 首页</button>
+        <button onclick="switchTab('blog')" id="nav-blog" class="nav-item px-6 py-2 rounded-full text-sm text-gray-300 transition-all hover:text-white flex items-center gap-2"><i data-lucide="align-left" class="w-4 h-4"></i> 博客</button>
+        <button onclick="switchTab('projects')" id="nav-projects" class="nav-item px-6 py-2 rounded-full text-sm text-gray-300 transition-all hover:text-white flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4"></i> 项目</button>
+        <button onclick="switchTab('life')" id="nav-life" class="nav-item px-6 py-2 rounded-full text-sm text-gray-300 transition-all hover:text-white flex items-center gap-2"><i data-lucide="coffee" class="w-4 h-4"></i> 日常</button>
+    </nav>
+
+    <main class="w-full max-w-5xl mt-24 mb-10 z-10">
+        <!-- 头部个人信息 (JS 渲染) -->
+        <header id="header-container" class="glass-panel p-8 mb-8 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden group">
+            <!-- Content injected by JS -->
+        </header>
+
+        <!-- Home Tab -->
+        <div id="home" class="tab-content active">
+            <div id="home-grid" class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-3 gap-6 auto-rows-[minmax(180px,auto)]">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Blog Tab -->
+        <div id="blog" class="tab-content max-w-3xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6 pl-2">文章列表</h2>
+            <div id="blog-list" class="space-y-4">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Projects Tab -->
+        <div id="projects" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 pl-2">我的项目</h2>
+            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Life Tab -->
+        <div id="life" class="tab-content">
+            <div id="life-gallery" class="columns-2 md:columns-3 gap-6 space-y-6">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-auto py-8 text-center text-xs text-gray-500 z-10">
+        <p id="footer-text">&copy; 2024 Alex.Dev | Built with ❤️</p>
+    </footer>
+
+    <!-- ========================================== -->
+    <!--          这里是你可以修改的区域           -->
+    <!--          只需要修改引号里的文字           -->
+    <!-- ========================================== -->
+    <script>
+        const contentData = {
+            // 1. 个人信息
+            profile: {
+                name: "Alex.Dev",
+                role: "全栈开发者 | 摄影爱好者",
+                bio: "你好，这里是我的数字花园。热衷于构建优雅的用户界面和探索前沿技术。喜欢摄影、代码和凌晨两点的城市。",
+                avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+                links: { github: "#", twitter: "#", mail: "mailto:your@email.com" }
+            },
+
+            // 2. 首页的小组件数据
+            homeWidgets: {
+                latestProject: {
+                    title: "Neon Verse",
+                    desc: "下一代沉浸式 WebXR 体验框架。",
+                    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                },
+                listening: {
+                    song: "Midnight City - M83",
+                    status: "正在听"
+                },
+                coding: {
+                    hours: "8.5",
+                    label: "今日编程时长"
+                },
+                techStack: ["React", "TypeScript", "Next.js", "Tailwind", "Python", "SwiftUI", "Figma"]
+            },
+
+            // 3. 博客文章 (想加文章，复制一对花括号 {} 里的内容，改改字即可)
+            posts: [
+                {
+                    title: "为什么我开始使用 Rust 重构后端",
+                    date: "2023-11-28",
+                    category: "开发心得",
+                    desc: "在这篇文章中，我将分享从 Node.js 迁移到 Rust 的心路历程，以及性能提升的真实数据...",
+                    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
+                    link: "#" // 这里可以填文章详情页链接
+                },
+                {
+                    title: "极简主义与信息密度的平衡",
+                    date: "2023-10-15",
+                    category: "UI 设计",
+                    desc: "在设计复杂后台管理系统时，如何保持界面的清爽同时不丢失关键信息的展示效率。",
+                    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
+                    link: "#"
+                }
+            ],
+
+            // 4. 项目列表
+            projects: [
+                {
+                    name: "TaskFlow Pro",
+                    type: "生产力 / macOS",
+                    desc: "基于 AI 的自动化任务管理工具。",
+                    icon: "zap", // 图标名来自 lucide.dev
+                    color: "blue"
+                },
+                {
+                    name: "Lumina Lens",
+                    type: "摄影 / iOS",
+                    desc: "模拟经典胶片质感的滤镜相机。",
+                    icon: "camera",
+                    color: "purple"
+                },
+                {
+                    name: "EcoTrack",
+                    type: "Web App",
+                    desc: "碳足迹追踪与可视化平台。",
+                    icon: "globe",
+                    color: "emerald"
+                }
+            ],
+
+            // 5. 日常照片墙 (复制一行改图片链接即可)
+            lifePhotos: [
+                { url: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80", caption: "东京街头，2023" },
+                { url: "https://images.unsplash.com/photo-1481487484168-9b995ecc168d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80", caption: "" },
+                { text: "Stay hungry, stay foolish." }, // 纯文字卡片
+                { url: "https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80", caption: "Workspace" },
+                { url: "https://images.unsplash.com/photo-1593642532400-2682810df593?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80", caption: "" }
+            ]
+        };
+
+        // ==========================================
+        //      下方是渲染逻辑 (不需要看，不需要改)
+        // ==========================================
+        
+        function renderSite() {
+            // Render Profile
+            const headerHTML = `
+                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                <div class="relative">
+                    <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-white/20 shadow-2xl">
+                        <img src="${contentData.profile.avatar}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-2 border-[#0f172a] rounded-full animate-pulse"></div>
+                </div>
+                <div class="flex-1 text-center md:text-left">
+                    <div class="flex flex-col md:flex-row items-center md:items-end gap-3 mb-2">
+                        <h1 class="text-4xl font-bold text-gradient tracking-tight">${contentData.profile.name}</h1>
+                        <span class="text-sm px-2 py-0.5 rounded-md bg-white/10 border border-white/10 text-blue-200">${contentData.profile.role}</span>
+                    </div>
+                    <p class="text-gray-300 max-w-xl leading-relaxed">${contentData.profile.bio}</p>
+                    <div class="flex gap-4 mt-6 justify-center md:justify-start">
+                        ${Object.entries(contentData.profile.links).map(([key, link]) => `
+                            <a href="${link}" class="ios-btn p-3 rounded-full hover:bg-white/20"><i data-lucide="${key}" class="w-5 h-5"></i></a>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="hidden md:flex flex-col items-end justify-center opacity-80">
+                    <div id="clock-time" class="text-5xl font-thin tracking-tighter">--:--</div>
+                    <div id="clock-date" class="text-sm font-medium uppercase tracking-widest text-blue-200">Loading...</div>
+                </div>
+            `;
+            document.getElementById('header-container').innerHTML = headerHTML;
+
+            // Render Home Grid
+            const homeHTML = `
+                <div class="glass-panel md:col-span-2 md:row-span-2 p-6 flex flex-col justify-between group cursor-pointer relative overflow-hidden">
+                    <img src="${contentData.homeWidgets.latestProject.image}" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div class="relative z-10 flex justify-between items-start">
+                        <span class="bg-blue-500/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold shadow-lg">LATEST PROJECT</span>
+                        <i data-lucide="arrow-up-right" class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 class="text-2xl font-bold mb-1">${contentData.homeWidgets.latestProject.title}</h3>
+                        <p class="text-gray-300 text-sm">${contentData.homeWidgets.latestProject.desc}</p>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 flex flex-col justify-center items-center text-center">
+                    <div class="w-12 h-12 bg-gradient-to-tr from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-orange-500/20"><i data-lucide="music" class="w-6 h-6 text-white"></i></div>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider mb-1">${contentData.homeWidgets.listening.status}</span>
+                    <p class="font-medium text-sm truncate w-full">${contentData.homeWidgets.listening.song}</p>
+                    <div class="w-full h-1 bg-white/10 rounded-full mt-3 overflow-hidden"><div class="h-full w-2/3 bg-white/80 rounded-full animate-pulse"></div></div>
+                </div>
+                <div class="glass-panel p-6 flex flex-col justify-between">
+                    <div class="flex justify-between items-center text-gray-400"><span class="text-xs font-semibold uppercase">Coding</span><i data-lucide="code-2" class="w-4 h-4"></i></div>
+                    <div><div class="text-3xl font-bold">${contentData.homeWidgets.coding.hours}<span class="text-base font-normal text-gray-400"> hrs</span></div><div class="text-xs text-green-400 mt-1 flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i> ${contentData.homeWidgets.coding.label}</div></div>
+                </div>
+                <!-- Dynamic latest blog preview on home -->
+                <div class="glass-panel md:col-span-2 p-6 flex flex-col justify-center group cursor-pointer hover:bg-white/10" onclick="switchTab('blog')">
+                    <div class="text-xs text-blue-300 mb-2 font-mono">LATEST POST</div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-blue-200 transition-colors">${contentData.posts[0].title}</h3>
+                    <p class="text-gray-400 text-sm line-clamp-2">${contentData.posts[0].desc}</p>
+                </div>
+                <div class="glass-panel md:row-span-2 p-6">
+                    <h4 class="text-sm font-semibold uppercase text-gray-400 mb-4">Tech Stack</h4>
+                    <div class="flex flex-wrap gap-2">
+                        ${contentData.homeWidgets.techStack.map(tech => `<span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs hover:bg-white/10 transition">${tech}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+            document.getElementById('home-grid').innerHTML = homeHTML;
+
+            // Render Blog List
+            const blogHTML = contentData.posts.map(post => `
+                <article class="glass-panel p-6 flex flex-col md:flex-row gap-6 cursor-pointer group" onclick="window.location.href='${post.link}'">
+                    <div class="w-full md:w-48 h-32 rounded-xl overflow-hidden flex-shrink-0 relative">
+                        <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <div class="flex items-center gap-2 mb-2 text-xs text-blue-300">
+                            <span>${post.category}</span><span class="w-1 h-1 rounded-full bg-white/30"></span><span>${post.date}</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-blue-300 transition-colors">${post.title}</h3>
+                        <p class="text-gray-400 text-sm line-clamp-2">${post.desc}</p>
+                    </div>
+                </article>
+            `).join('');
+            document.getElementById('blog-list').innerHTML = blogHTML;
+
+            // Render Projects
+            const projHTML = contentData.projects.map(proj => `
+                <div class="glass-panel p-6 flex gap-4 items-center group cursor-pointer hover:bg-white/10">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-${proj.color}-500 to-${proj.color}-400 flex items-center justify-center shadow-lg shadow-${proj.color}-500/20 text-white transform group-hover:scale-105 transition-transform">
+                        <i data-lucide="${proj.icon}" class="w-10 h-10"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg">${proj.name}</h3>
+                        <p class="text-xs text-gray-400 mb-2">${proj.type}</p>
+                        <p class="text-sm text-gray-300 line-clamp-1">${proj.desc}</p>
+                    </div>
+                    <button class="bg-white/10 group-hover:bg-white/20 text-${proj.color}-300 text-xs font-bold py-1.5 px-4 rounded-full border border-${proj.color}-500/30 uppercase tracking-wide transition-colors">View</button>
+                </div>
+            `).join('');
+            document.getElementById('projects-grid').innerHTML = projHTML;
+
+            // Render Life Gallery
+            const lifeHTML = contentData.lifePhotos.map(item => {
+                if (item.text) {
+                    return `<div class="glass-panel p-4 break-inside-avoid bg-black/40 mb-6 flex items-center justify-center aspect-square"><p class="font-serif italic text-lg text-center text-gray-200">"${item.text}"</p></div>`;
+                }
+                return `
+                    <div class="glass-panel p-2 break-inside-avoid mb-6 group">
+                        <img src="${item.url}" class="rounded-xl w-full">
+                        ${item.caption ? `<p class="p-2 text-xs text-gray-400 group-hover:text-white transition-colors">${item.caption}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('life-gallery').innerHTML = lifeHTML;
+            
+            // Re-init icons and time
+            lucide.createIcons();
+            updateClock();
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+        }
+
+        // Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => {
+                i.classList.remove('active', 'text-white');
+                i.classList.add('text-gray-300');
+            });
+            document.getElementById(tabId).classList.add('active');
+            const btn = document.getElementById('nav-' + tabId);
+            btn.classList.add('active', 'text-white');
+            btn.classList.remove('text-gray-300');
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const timeEl = document.getElementById('clock-time');
+            const dateEl = document.getElementById('clock-date');
+            if(timeEl) timeEl.innerText = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            if(dateEl) dateEl.innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        }
+
+        window.onload = renderSite;
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
