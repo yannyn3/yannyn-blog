@@ -3,326 +3,654 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Space | futuristic iOS Style</title>
+    <title>My Space | OS Style</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs (Compat version for easier standalone usage) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
     <style>
-        /* --- 核心样式区 (不懂不要动这里) --- */
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #ffffff; overflow-x: hidden; }
-        .aurora-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.4), transparent 50%), radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.4), transparent 50%), radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.2), transparent 50%); filter: blur(60px); z-index: -1; animation: breathe 10s ease-in-out infinite alternate; }
-        @keyframes breathe { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 1; } }
-        .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05); border-radius: 24px; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        .glass-panel:hover { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); transform: translateY(-5px) scale(1.01); box-shadow: 0 20px 40px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
-        .ios-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.2s; }
-        .ios-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
-        .text-gradient { background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .tab-content { display: none; animation: fadeIn 0.5s ease forwards; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-item.active { background: rgba(255,255,255,0.2); font-weight: 600; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        /* --- 动态主题变量 --- */
+        :root {
+            --bg-color: #0f172a;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-hover: rgba(255, 255, 255, 0.08);
+            --accent-color: #3b82f6;
+            --font-main: 'Inter', sans-serif;
+            --border-radius: 24px;
+        }
+
+        /* 赛博朋克主题 */
+        [data-theme="cyber"] {
+            --bg-color: #000000;
+            --text-primary: #facc15;
+            --text-secondary: #06b6d4;
+            --glass-bg: rgba(16, 185, 129, 0.1);
+            --glass-border: rgba(250, 204, 21, 0.3);
+            --glass-hover: rgba(250, 204, 21, 0.1);
+            --accent-color: #ec4899;
+            --font-main: 'JetBrains Mono', monospace;
+            --border-radius: 4px;
+        }
+
+        /* 水墨禅意主题 */
+        [data-theme="zen"] {
+            --bg-color: #f5f5f4;
+            --text-primary: #1c1917;
+            --text-secondary: #57534e;
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --glass-border: rgba(0, 0, 0, 0.05);
+            --glass-hover: rgba(255, 255, 255, 0.8);
+            --accent-color: #44403c;
+            --font-main: 'Noto Serif SC', serif;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            transition: background-color 0.5s, color 0.5s;
+            overflow-x: hidden;
+        }
+
+        /* 极光背景 (仅在默认主题显示) */
+        .aurora-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.4), transparent 50%), 
+                        radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.4), transparent 50%), 
+                        radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.2), transparent 50%);
+            filter: blur(60px); z-index: -1;
+            opacity: 1; transition: opacity 0.5s;
+            animation: breathe 10s ease-in-out infinite alternate;
+        }
+        [data-theme="zen"] .aurora-bg, [data-theme="cyber"] .aurora-bg { opacity: 0; }
+
+        /* 网格背景 (Cyber主题) */
+        .cyber-grid {
+            position: fixed; inset: 0; z-index: -1; opacity: 0;
+            background-image: linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transition: opacity 0.5s;
+        }
+        [data-theme="cyber"] .cyber-grid { opacity: 1; }
+
+        /* 核心玻璃类 */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .glass-panel:hover {
+            transform: translateY(-4px);
+            background: var(--glass-hover);
+            border-color: var(--text-secondary);
+        }
+
+        /* 新版导航栏 (悬浮胶囊) */
+        .nav-capsule {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            padding: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+        [data-theme="zen"] .nav-capsule { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); }
         
-        /* 简单的 Loading 动画 */
-        #loader { position: fixed; inset: 0; background: #0f172a; z-index: 100; display: flex; justify-content: center; items-center; transition: opacity 0.5s; }
+        .nav-item {
+            padding: 0.5rem 1.2rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-item.active {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+        [data-theme="zen"] .nav-item.active { background: rgba(0,0,0,0.05); color: #000; }
+        [data-theme="cyber"] .nav-item.active { background: var(--accent-color); color: #000; box-shadow: 0 0 15px var(--accent-color); }
+
+        /* 广告位样式 */
+        .ad-slot {
+            background: repeating-linear-gradient(45deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px);
+            display: flex; align-items: center; justify-content: center;
+            border: 1px dashed var(--glass-border);
+            position: relative; overflow: hidden;
+        }
+        .ad-label {
+            position: absolute; top: 4px; right: 4px;
+            font-size: 0.6rem; background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 2px;
+            color: #aaa;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            z-index: 100; display: flex; justify-content: center; items-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--bg-color); border: 1px solid var(--glass-border);
+            width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+            border-radius: var(--border-radius); padding: 2rem;
+            transform: scale(0.95); transition: transform 0.3s;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .modal-overlay.open .modal-content { transform: scale(1); }
+
+        /* 输入框通用样式 */
+        .input-glass {
+            width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border);
+            color: var(--text-primary); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;
+            outline: none; transition: border-color 0.3s;
+        }
+        .input-glass:focus { border-color: var(--accent-color); }
+        
+        @keyframes breathe { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 1; } }
     </style>
 </head>
-<body class="min-h-screen relative p-4 md:p-8 flex flex-col items-center">
+<body class="min-h-screen flex flex-col items-center">
 
-    <!-- Loading Screen -->
-    <div id="loader"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>
-
+    <!-- 背景 -->
     <div class="aurora-bg"></div>
+    <div class="cyber-grid"></div>
 
-    <!-- 导航栏 -->
-    <nav class="fixed top-6 z-50 glass-panel !rounded-full px-2 py-2 flex items-center space-x-1 shadow-2xl scale-90 md:scale-100">
-        <button onclick="switchTab('home')" id="nav-home" class="nav-item active px-6 py-2 rounded-full text-sm text-gray-300 transition-all hover:text-white flex items-center gap-2"><i data-lucide="layout-grid" class="w-4 h-4"></i> 首页</button>
-        <button onclick="switchTab('blog')" id="nav-blog" class="nav-item px-6 py-2 rounded-full text-sm text-gray-300 transition-all hover:text-white flex items-center gap-2"><i data-lucide="align-left" class="w-4 h-4"></i> 博客</button>
-        <button onclick="switchTab('projects')" id="nav-projects" class="nav-item px-6 py-2 rounded-full text-sm text-gray-300 transition-all hover:text-white flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4"></i> 项目</button>
-        <button onclick="switchTab('life')" id="nav-life" class="nav-item px-6 py-2 rounded-full text-sm text-gray-300 transition-all hover:text-white flex items-center gap-2"><i data-lucide="coffee" class="w-4 h-4"></i> 日常</button>
+    <!-- 顶部导航栏 (升级版) -->
+    <nav class="fixed top-6 z-50 nav-capsule">
+        <button onclick="app.switchTab('home')" id="nav-home" class="nav-item active flex items-center gap-2">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i> <span data-i18n="nav.home">首页</span>
+        </button>
+        <button onclick="app.switchTab('blog')" id="nav-blog" class="nav-item flex items-center gap-2">
+            <i data-lucide="feather" class="w-4 h-4"></i> <span data-i18n="nav.blog">博客</span>
+        </button>
+        <button onclick="app.switchTab('projects')" id="nav-projects" class="nav-item flex items-center gap-2">
+            <i data-lucide="cpu" class="w-4 h-4"></i> <span data-i18n="nav.projects">项目</span>
+        </button>
+        <button onclick="app.switchTab('links')" id="nav-links" class="nav-item flex items-center gap-2">
+            <i data-lucide="link" class="w-4 h-4"></i> <span data-i18n="nav.links">友链</span>
+        </button>
     </nav>
 
-    <main class="w-full max-w-5xl mt-24 mb-10 z-10">
-        <!-- 头部个人信息 (JS 渲染) -->
-        <header id="header-container" class="glass-panel p-8 mb-8 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden group">
-            <!-- Content injected by JS -->
+    <!-- 设置/管理 浮动按钮 (右下角) -->
+    <button onclick="app.openModal('settings-modal')" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:rotate-90 transition-transform cursor-pointer">
+        <i data-lucide="settings" class="w-6 h-6 text-gray-400"></i>
+    </button>
+    <!-- 写文章 浮动按钮 (仅在连接云端后显示) -->
+    <button id="btn-write-post" onclick="app.openModal('write-modal')" class="fixed bottom-20 right-6 z-50 w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:bg-blue-500 transition-colors hidden">
+        <i data-lucide="plus" class="w-6 h-6"></i>
+    </button>
+
+    <main class="w-full max-w-6xl mt-28 mb-10 z-10 px-4 md:px-8">
+        
+        <!-- Header 区域 -->
+        <header id="header-area" class="glass-panel p-8 mb-8 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden">
+            <!-- 渲染逻辑 -->
         </header>
 
         <!-- Home Tab -->
-        <div id="home" class="tab-content active">
-            <div id="home-grid" class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-3 gap-6 auto-rows-[minmax(180px,auto)]">
-                <!-- Content injected by JS -->
+        <div id="home" class="tab-content active animate-fade-in">
+            <div id="home-grid" class="grid grid-cols-1 md:grid-cols-4 grid-rows-auto gap-6">
+                <!-- 渲染逻辑 -->
             </div>
         </div>
 
         <!-- Blog Tab -->
-        <div id="blog" class="tab-content max-w-3xl mx-auto">
-            <h2 class="text-2xl font-bold mb-6 pl-2">文章列表</h2>
-            <div id="blog-list" class="space-y-4">
-                <!-- Content injected by JS -->
+        <div id="blog" class="tab-content hidden animate-fade-in max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold" data-i18n="blog.title">思维碎片</h2>
+                <div class="flex gap-2">
+                    <button class="px-3 py-1 rounded-full text-xs bg-white/10 hover:bg-white/20">All</button>
+                    <button class="px-3 py-1 rounded-full text-xs bg-transparent border border-white/10 hover:bg-white/10">Tech</button>
+                    <button class="px-3 py-1 rounded-full text-xs bg-transparent border border-white/10 hover:bg-white/10">Life</button>
+                </div>
+            </div>
+            <div id="blog-list" class="space-y-6">
+                <!-- 列表渲染 -->
             </div>
         </div>
 
         <!-- Projects Tab -->
-        <div id="projects" class="tab-content">
-            <h2 class="text-2xl font-bold mb-6 pl-2">我的项目</h2>
-            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Content injected by JS -->
+        <div id="projects" class="tab-content hidden animate-fade-in">
+            <h2 class="text-3xl font-bold mb-6 pl-2" data-i18n="projects.title">现实扭曲力场</h2>
+            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 项目渲染 -->
             </div>
         </div>
 
-        <!-- Life Tab -->
-        <div id="life" class="tab-content">
-            <div id="life-gallery" class="columns-2 md:columns-3 gap-6 space-y-6">
-                <!-- Content injected by JS -->
+        <!-- Links Tab -->
+        <div id="links" class="tab-content hidden animate-fade-in">
+            <h2 class="text-3xl font-bold mb-6 pl-2" data-i18n="links.title">传送门</h2>
+            <div id="links-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- 友链渲染 -->
             </div>
         </div>
+
     </main>
 
-    <footer class="mt-auto py-8 text-center text-xs text-gray-500 z-10">
-        <p id="footer-text">&copy; 2024 Alex.Dev | Built with ❤️</p>
+    <!-- Footer -->
+    <footer class="mt-auto py-8 text-center text-xs text-gray-500 z-10 w-full glass-panel border-0 border-t rounded-none">
+        <p>&copy; 2025 Alex.Dev | Power by <span id="footer-mode">Local Mode</span></p>
     </footer>
 
-    <!-- ========================================== -->
-    <!--          这里是你可以修改的区域           -->
-    <!--          只需要修改引号里的文字           -->
-    <!-- ========================================== -->
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- 设置模态框 -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content mt-20">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">System Settings</h3>
+                <button onclick="app.closeModal('settings-modal')"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <!-- 主题切换 -->
+            <div class="mb-6">
+                <label class="block text-sm text-gray-400 mb-2">Theme / 主题</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="app.setTheme('default')" class="p-2 rounded border border-gray-600 bg-[#0f172a] text-white text-xs">Deep Ocean</button>
+                    <button onclick="app.setTheme('cyber')" class="p-2 rounded border border-gray-600 bg-black text-[#facc15] text-xs">Cyberpunk</button>
+                    <button onclick="app.setTheme('zen')" class="p-2 rounded border border-gray-600 bg-[#f5f5f4] text-black text-xs">Zen Ink</button>
+                </div>
+            </div>
+
+            <!-- 语言切换 -->
+            <div class="mb-6">
+                <label class="block text-sm text-gray-400 mb-2">Language / 语言</label>
+                <div class="flex gap-3">
+                    <button onclick="app.setLang('zh')" class="flex-1 p-2 rounded border border-white/20 hover:bg-white/10">中文</button>
+                    <button onclick="app.setLang('en')" class="flex-1 p-2 rounded border border-white/20 hover:bg-white/10">English</button>
+                </div>
+            </div>
+
+            <!-- 云端配置 -->
+            <div class="mb-6 border-t border-white/10 pt-4">
+                <label class="block text-sm text-blue-400 mb-2 font-bold">Cloud Config (Firebase)</label>
+                <p class="text-xs text-gray-500 mb-2">粘贴你的 Firebase Config JSON 即可开启云端存储与发布功能。</p>
+                <textarea id="firebase-config-input" class="input-glass h-24 text-xs font-mono" placeholder='{"apiKey": "...", "projectId": "..."}'></textarea>
+                <button onclick="app.saveCloudConfig()" class="w-full py-2 bg-blue-600 rounded-lg text-sm font-bold hover:bg-blue-500">Connect Cloud</button>
+                <button onclick="app.clearCloudConfig()" class="w-full mt-2 py-2 bg-red-900/50 text-red-300 rounded-lg text-xs hover:bg-red-900">Disconnect / Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 写文章模态框 -->
+    <div id="write-modal" class="modal-overlay">
+        <div class="modal-content mt-10 w-full max-w-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">New Signal</h3>
+                <button onclick="app.closeModal('write-modal')"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <input type="text" id="post-title" class="input-glass text-lg font-bold" placeholder="Title / 标题">
+            <div class="flex gap-2 mb-2">
+                <input type="text" id="post-cat" class="input-glass flex-1" placeholder="Category (e.g. Tech)">
+                <input type="text" id="post-img" class="input-glass flex-1" placeholder="Cover Image URL">
+            </div>
+            <textarea id="post-content" class="input-glass h-40" placeholder="Write something... (Supports simple text currently)"></textarea>
+            <button onclick="app.publishPost()" class="w-full py-3 bg-green-600 rounded-lg font-bold hover:bg-green-500 text-white">Publish Signal</button>
+        </div>
+    </div>
+
     <script>
-        const contentData = {
-            // 1. 个人信息
+        // ==========================================
+        //             核心应用逻辑 (App OS)
+        // ==========================================
+
+        const i18n = {
+            zh: {
+                "nav.home": "首页", "nav.blog": "博客", "nav.projects": "项目", "nav.links": "友链",
+                "blog.title": "思维碎片", "projects.title": "现实扭曲力场", "links.title": "传送门"
+            },
+            en: {
+                "nav.home": "Home", "nav.blog": "Blog", "nav.projects": "Lab", "nav.links": "Links",
+                "blog.title": "Mind Fragments", "projects.title": "Reality Distortion", "links.title": "Portals"
+            }
+        };
+
+        // 默认演示数据 (Local Mode)
+        const defaultData = {
             profile: {
                 name: "Alex.Dev",
-                role: "全栈开发者 | 摄影爱好者",
-                bio: "你好，这里是我的数字花园。热衷于构建优雅的用户界面和探索前沿技术。喜欢摄影、代码和凌晨两点的城市。",
-                avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
-                links: { github: "#", twitter: "#", mail: "mailto:your@email.com" }
+                role: "Full Stack Developer",
+                bio: "Building digital dreams. 探索代码与艺术的边界。",
+                avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80"
             },
-
-            // 2. 首页的小组件数据
-            homeWidgets: {
-                latestProject: {
-                    title: "Neon Verse",
-                    desc: "下一代沉浸式 WebXR 体验框架。",
-                    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                },
-                listening: {
-                    song: "Midnight City - M83",
-                    status: "正在听"
-                },
-                coding: {
-                    hours: "8.5",
-                    label: "今日编程时长"
-                },
-                techStack: ["React", "TypeScript", "Next.js", "Tailwind", "Python", "SwiftUI", "Figma"]
-            },
-
-            // 3. 博客文章 (想加文章，复制一对花括号 {} 里的内容，改改字即可)
             posts: [
-                {
-                    title: "为什么我开始使用 Rust 重构后端",
-                    date: "2023-11-28",
-                    category: "开发心得",
-                    desc: "在这篇文章中，我将分享从 Node.js 迁移到 Rust 的心路历程，以及性能提升的真实数据...",
-                    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-                    link: "#" // 这里可以填文章详情页链接
-                },
-                {
-                    title: "极简主义与信息密度的平衡",
-                    date: "2023-10-15",
-                    category: "UI 设计",
-                    desc: "在设计复杂后台管理系统时，如何保持界面的清爽同时不丢失关键信息的展示效率。",
-                    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-                    link: "#"
-                }
+                { id: 1, title: "Hello World 2.0", cat: "Life", date: "2024-01-01", desc: "这是网站重构后的第一篇文章，支持云端发布了！", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=500&q=60" },
+                { id: 2, title: "Design Systems", cat: "UI/UX", date: "2023-12-15", desc: "如何构建一套可扩展的设计系统。", img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=500&q=60" }
             ],
-
-            // 4. 项目列表
-            projects: [
-                {
-                    name: "TaskFlow Pro",
-                    type: "生产力 / macOS",
-                    desc: "基于 AI 的自动化任务管理工具。",
-                    icon: "zap", // 图标名来自 lucide.dev
-                    color: "blue"
-                },
-                {
-                    name: "Lumina Lens",
-                    type: "摄影 / iOS",
-                    desc: "模拟经典胶片质感的滤镜相机。",
-                    icon: "camera",
-                    color: "purple"
-                },
-                {
-                    name: "EcoTrack",
-                    type: "Web App",
-                    desc: "碳足迹追踪与可视化平台。",
-                    icon: "globe",
-                    color: "emerald"
-                }
-            ],
-
-            // 5. 日常照片墙 (复制一行改图片链接即可)
-            lifePhotos: [
-                { url: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80", caption: "东京街头，2023" },
-                { url: "https://images.unsplash.com/photo-1481487484168-9b995ecc168d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80", caption: "" },
-                { text: "Stay hungry, stay foolish." }, // 纯文字卡片
-                { url: "https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80", caption: "Workspace" },
-                { url: "https://images.unsplash.com/photo-1593642532400-2682810df593?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80", caption: "" }
+            links: [
+                { name: "Google", url: "https://google.com", desc: "Search Engine", icon: "search" },
+                { name: "GitHub", url: "https://github.com", desc: "Code Hosting", icon: "github" }
             ]
         };
 
-        // ==========================================
-        //      下方是渲染逻辑 (不需要看，不需要改)
-        // ==========================================
-        
-        function renderSite() {
-            // Render Profile
-            const headerHTML = `
-                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                <div class="relative">
-                    <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-white/20 shadow-2xl">
-                        <img src="${contentData.profile.avatar}" class="w-full h-full object-cover">
-                    </div>
-                    <div class="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-2 border-[#0f172a] rounded-full animate-pulse"></div>
-                </div>
-                <div class="flex-1 text-center md:text-left">
-                    <div class="flex flex-col md:flex-row items-center md:items-end gap-3 mb-2">
-                        <h1 class="text-4xl font-bold text-gradient tracking-tight">${contentData.profile.name}</h1>
-                        <span class="text-sm px-2 py-0.5 rounded-md bg-white/10 border border-white/10 text-blue-200">${contentData.profile.role}</span>
-                    </div>
-                    <p class="text-gray-300 max-w-xl leading-relaxed">${contentData.profile.bio}</p>
-                    <div class="flex gap-4 mt-6 justify-center md:justify-start">
-                        ${Object.entries(contentData.profile.links).map(([key, link]) => `
-                            <a href="${link}" class="ios-btn p-3 rounded-full hover:bg-white/20"><i data-lucide="${key}" class="w-5 h-5"></i></a>
-                        `).join('')}
-                    </div>
-                </div>
-                <div class="hidden md:flex flex-col items-end justify-center opacity-80">
-                    <div id="clock-time" class="text-5xl font-thin tracking-tighter">--:--</div>
-                    <div id="clock-date" class="text-sm font-medium uppercase tracking-widest text-blue-200">Loading...</div>
-                </div>
-            `;
-            document.getElementById('header-container').innerHTML = headerHTML;
+        const app = {
+            state: {
+                lang: 'zh',
+                theme: 'default',
+                dbConnected: false,
+                data: JSON.parse(JSON.stringify(defaultData)), // Deep copy
+                user: null
+            },
 
-            // Render Home Grid
-            const homeHTML = `
-                <div class="glass-panel md:col-span-2 md:row-span-2 p-6 flex flex-col justify-between group cursor-pointer relative overflow-hidden">
-                    <img src="${contentData.homeWidgets.latestProject.image}" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="relative z-10 flex justify-between items-start">
-                        <span class="bg-blue-500/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold shadow-lg">LATEST PROJECT</span>
-                        <i data-lucide="arrow-up-right" class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                    </div>
-                    <div class="relative z-10">
-                        <h3 class="text-2xl font-bold mb-1">${contentData.homeWidgets.latestProject.title}</h3>
-                        <p class="text-gray-300 text-sm">${contentData.homeWidgets.latestProject.desc}</p>
-                    </div>
-                </div>
-                <div class="glass-panel p-6 flex flex-col justify-center items-center text-center">
-                    <div class="w-12 h-12 bg-gradient-to-tr from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-orange-500/20"><i data-lucide="music" class="w-6 h-6 text-white"></i></div>
-                    <span class="text-xs text-gray-400 uppercase tracking-wider mb-1">${contentData.homeWidgets.listening.status}</span>
-                    <p class="font-medium text-sm truncate w-full">${contentData.homeWidgets.listening.song}</p>
-                    <div class="w-full h-1 bg-white/10 rounded-full mt-3 overflow-hidden"><div class="h-full w-2/3 bg-white/80 rounded-full animate-pulse"></div></div>
-                </div>
-                <div class="glass-panel p-6 flex flex-col justify-between">
-                    <div class="flex justify-between items-center text-gray-400"><span class="text-xs font-semibold uppercase">Coding</span><i data-lucide="code-2" class="w-4 h-4"></i></div>
-                    <div><div class="text-3xl font-bold">${contentData.homeWidgets.coding.hours}<span class="text-base font-normal text-gray-400"> hrs</span></div><div class="text-xs text-green-400 mt-1 flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i> ${contentData.homeWidgets.coding.label}</div></div>
-                </div>
-                <!-- Dynamic latest blog preview on home -->
-                <div class="glass-panel md:col-span-2 p-6 flex flex-col justify-center group cursor-pointer hover:bg-white/10" onclick="switchTab('blog')">
-                    <div class="text-xs text-blue-300 mb-2 font-mono">LATEST POST</div>
-                    <h3 class="text-xl font-bold mb-2 group-hover:text-blue-200 transition-colors">${contentData.posts[0].title}</h3>
-                    <p class="text-gray-400 text-sm line-clamp-2">${contentData.posts[0].desc}</p>
-                </div>
-                <div class="glass-panel md:row-span-2 p-6">
-                    <h4 class="text-sm font-semibold uppercase text-gray-400 mb-4">Tech Stack</h4>
-                    <div class="flex flex-wrap gap-2">
-                        ${contentData.homeWidgets.techStack.map(tech => `<span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs hover:bg-white/10 transition">${tech}</span>`).join('')}
-                    </div>
-                </div>
-            `;
-            document.getElementById('home-grid').innerHTML = homeHTML;
+            db: null, // Firestore instance
 
-            // Render Blog List
-            const blogHTML = contentData.posts.map(post => `
-                <article class="glass-panel p-6 flex flex-col md:flex-row gap-6 cursor-pointer group" onclick="window.location.href='${post.link}'">
-                    <div class="w-full md:w-48 h-32 rounded-xl overflow-hidden flex-shrink-0 relative">
-                        <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                    </div>
-                    <div class="flex flex-col justify-center">
-                        <div class="flex items-center gap-2 mb-2 text-xs text-blue-300">
-                            <span>${post.category}</span><span class="w-1 h-1 rounded-full bg-white/30"></span><span>${post.date}</span>
-                        </div>
-                        <h3 class="text-xl font-bold mb-2 group-hover:text-blue-300 transition-colors">${post.title}</h3>
-                        <p class="text-gray-400 text-sm line-clamp-2">${post.desc}</p>
-                    </div>
-                </article>
-            `).join('');
-            document.getElementById('blog-list').innerHTML = blogHTML;
+            init: async function() {
+                // 1. Load Settings
+                const storedTheme = localStorage.getItem('site_theme');
+                if(storedTheme) this.setTheme(storedTheme);
+                
+                const storedLang = localStorage.getItem('site_lang');
+                if(storedLang) this.setLang(storedLang);
 
-            // Render Projects
-            const projHTML = contentData.projects.map(proj => `
-                <div class="glass-panel p-6 flex gap-4 items-center group cursor-pointer hover:bg-white/10">
-                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-${proj.color}-500 to-${proj.color}-400 flex items-center justify-center shadow-lg shadow-${proj.color}-500/20 text-white transform group-hover:scale-105 transition-transform">
-                        <i data-lucide="${proj.icon}" class="w-10 h-10"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="font-bold text-lg">${proj.name}</h3>
-                        <p class="text-xs text-gray-400 mb-2">${proj.type}</p>
-                        <p class="text-sm text-gray-300 line-clamp-1">${proj.desc}</p>
-                    </div>
-                    <button class="bg-white/10 group-hover:bg-white/20 text-${proj.color}-300 text-xs font-bold py-1.5 px-4 rounded-full border border-${proj.color}-500/30 uppercase tracking-wide transition-colors">View</button>
-                </div>
-            `).join('');
-            document.getElementById('projects-grid').innerHTML = projHTML;
+                // 2. Check for Cloud Config
+                const cloudConfig = localStorage.getItem('firebase_config');
+                if (cloudConfig) {
+                    try {
+                        const config = JSON.parse(cloudConfig);
+                        firebase.initializeApp(config);
+                        this.db = firebase.firestore();
+                        this.state.dbConnected = true;
+                        
+                        // Anon Auth for reading/writing (Demo rules usually allow open RW or auth-based)
+                        await firebase.auth().signInAnonymously();
+                        
+                        document.getElementById('footer-mode').innerText = "Cloud Mode (Connected)";
+                        document.getElementById('footer-mode').className = "text-green-500 font-bold";
+                        document.getElementById('btn-write-post').classList.remove('hidden');
 
-            // Render Life Gallery
-            const lifeHTML = contentData.lifePhotos.map(item => {
-                if (item.text) {
-                    return `<div class="glass-panel p-4 break-inside-avoid bg-black/40 mb-6 flex items-center justify-center aspect-square"><p class="font-serif italic text-lg text-center text-gray-200">"${item.text}"</p></div>`;
+                        // Load Data from Cloud
+                        await this.loadCloudData();
+
+                    } catch (e) {
+                        console.error("Cloud Init Failed:", e);
+                        alert("云端配置连接失败，已回退到本地模式。请检查配置 JSON。");
+                    }
                 }
-                return `
-                    <div class="glass-panel p-2 break-inside-avoid mb-6 group">
-                        <img src="${item.url}" class="rounded-xl w-full">
-                        ${item.caption ? `<p class="p-2 text-xs text-gray-400 group-hover:text-white transition-colors">${item.caption}</p>` : ''}
+
+                this.render();
+                lucide.createIcons();
+            },
+
+            loadCloudData: async function() {
+                if(!this.db) return;
+                // Fetch Posts
+                const postsSnap = await this.db.collection('posts').orderBy('date', 'desc').limit(10).get();
+                if(!postsSnap.empty) {
+                    this.state.data.posts = postsSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                }
+                // Fetch Links if collection exists (skipped for simplicity in demo)
+                this.render(); // Re-render with cloud data
+            },
+
+            render: function() {
+                this.updateText();
+                this.renderHeader();
+                this.renderHome();
+                this.renderBlog();
+                this.renderProjects();
+                this.renderLinks();
+                lucide.createIcons();
+            },
+
+            updateText: function() {
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if(i18n[this.state.lang][key]) el.innerText = i18n[this.state.lang][key];
+                });
+            },
+
+            renderHeader: function() {
+                const p = this.state.data.profile;
+                const html = `
+                    <div class="relative group">
+                        <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-white/20 shadow-2xl relative z-10">
+                            <img src="${p.avatar}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="absolute -inset-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                    </div>
+                    <div class="flex-1 text-center md:text-left z-10">
+                        <h1 class="text-4xl font-bold mb-2 tracking-tight">${p.name}</h1>
+                        <p class="text-blue-300 text-sm mb-3 uppercase tracking-wider font-semibold">${p.role}</p>
+                        <p class="text-gray-400 max-w-lg leading-relaxed">${p.bio}</p>
+                    </div>
+                    <div class="flex gap-3 mt-4 md:mt-0 z-10">
+                        <a href="#" class="p-3 glass-panel rounded-full hover:bg-white/20 transition"><i data-lucide="github" class="w-5 h-5"></i></a>
+                        <a href="#" class="p-3 glass-panel rounded-full hover:bg-white/20 transition"><i data-lucide="twitter" class="w-5 h-5"></i></a>
                     </div>
                 `;
-            }).join('');
-            document.getElementById('life-gallery').innerHTML = lifeHTML;
-            
-            // Re-init icons and time
-            lucide.createIcons();
-            updateClock();
-            document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
-        }
+                document.getElementById('header-area').innerHTML = html;
+            },
 
-        // Logic
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => {
-                i.classList.remove('active', 'text-white');
-                i.classList.add('text-gray-300');
-            });
-            document.getElementById(tabId).classList.add('active');
-            const btn = document.getElementById('nav-' + tabId);
-            btn.classList.add('active', 'text-white');
-            btn.classList.remove('text-gray-300');
-        }
+            renderHome: function() {
+                // Construct Grid
+                let html = `
+                    <!-- 1. 欢迎卡片 -->
+                    <div class="glass-panel md:col-span-2 p-6 flex flex-col justify-center relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <h3 class="text-2xl font-bold mb-2 z-10">Welcome Back.</h3>
+                        <p class="text-gray-400 z-10">System Status: <span class="text-green-400">Online</span></p>
+                        <p class="text-gray-500 text-sm mt-4 z-10">Latest sync: ${new Date().toLocaleTimeString()}</p>
+                    </div>
 
-        function updateClock() {
-            const now = new Date();
-            const timeEl = document.getElementById('clock-time');
-            const dateEl = document.getElementById('clock-date');
-            if(timeEl) timeEl.innerText = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-            if(dateEl) dateEl.innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-        }
+                    <!-- 2. 统计 -->
+                    <div class="glass-panel p-6 flex flex-col items-center justify-center text-center">
+                        <div class="text-4xl font-bold text-blue-400 mb-1">${this.state.data.posts.length}</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-widest">Articles</div>
+                    </div>
 
-        window.onload = renderSite;
-        setInterval(updateClock, 1000);
+                    <!-- 3. 广告位 (AdSense Placeholder) -->
+                    <div class="glass-panel ad-slot p-4">
+                        <span class="ad-label">Ad Space</span>
+                        <div class="text-center">
+                            <p class="text-xs text-gray-500">Google Ads / Sponsors</p>
+                            <p class="text-[10px] text-gray-600 mt-1">Contact for placement</p>
+                        </div>
+                    </div>
+
+                    <!-- 4. 最新文章预览 -->
+                    ${this.state.data.posts.slice(0, 1).map(post => `
+                        <div class="glass-panel md:col-span-2 md:row-span-2 relative group overflow-hidden cursor-pointer" onclick="app.switchTab('blog')">
+                            <img src="${post.img}" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+                            <div class="absolute bottom-6 left-6 right-6">
+                                <span class="text-xs bg-blue-600 px-2 py-1 rounded text-white mb-2 inline-block">NEW</span>
+                                <h3 class="text-xl font-bold text-white mb-1">${post.title}</h3>
+                                <p class="text-gray-300 text-sm line-clamp-2">${post.desc}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+
+                    <!-- 5. 快速功能 -->
+                    <div class="glass-panel p-6 flex flex-col justify-between group hover:bg-white/5 transition cursor-pointer">
+                        <i data-lucide="coffee" class="w-8 h-8 text-yellow-400 mb-4"></i>
+                        <div>
+                            <div class="font-bold">Buy me a coffee</div>
+                            <div class="text-xs text-gray-500">Support my work</div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel p-6 flex flex-col justify-between group hover:bg-white/5 transition cursor-pointer">
+                        <i data-lucide="mail" class="w-8 h-8 text-pink-400 mb-4"></i>
+                        <div>
+                            <div class="font-bold">Contact</div>
+                            <div class="text-xs text-gray-500">Hire me</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('home-grid').innerHTML = html;
+            },
+
+            renderBlog: function() {
+                const html = this.state.data.posts.map(post => `
+                    <article class="glass-panel p-6 flex flex-col md:flex-row gap-6 group cursor-pointer hover:bg-white/5 transition">
+                        <div class="w-full md:w-48 h-32 rounded-lg overflow-hidden shrink-0">
+                            <img src="${post.img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        </div>
+                        <div class="flex-1 flex flex-col justify-center">
+                            <div class="flex items-center gap-2 text-xs text-blue-400 mb-2">
+                                <span>${post.cat}</span> &bull; <span>${post.date}</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-blue-300 transition-colors">${post.title}</h3>
+                            <p class="text-gray-400 text-sm line-clamp-2">${post.desc}</p>
+                            
+                            <!-- 模拟翻译按钮 -->
+                            <div class="mt-3 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button class="text-xs text-gray-500 hover:text-white flex items-center gap-1"><i data-lucide="languages" class="w-3 h-3"></i> Translate</button>
+                            </div>
+                        </div>
+                    </article>
+                `).join('');
+                document.getElementById('blog-list').innerHTML = html;
+            },
+
+            renderProjects: function() {
+                // Sample static projects for now
+                const projects = [
+                    { name: "Neon Verse", desc: "WebXR Framework", color: "purple" },
+                    { name: "EcoTrack", desc: "Carbon Footprint App", color: "green" },
+                    { name: "TaskFlow", desc: "AI To-Do List", color: "blue" }
+                ];
+                const html = projects.map(p => `
+                    <div class="glass-panel p-6 border-l-4 border-${p.color}-500 hover:bg-white/5 transition cursor-pointer">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 rounded-lg bg-${p.color}-500/20 text-${p.color}-400"><i data-lucide="box" class="w-6 h-6"></i></div>
+                            <i data-lucide="arrow-up-right" class="w-4 h-4 text-gray-500"></i>
+                        </div>
+                        <h3 class="text-lg font-bold mb-1">${p.name}</h3>
+                        <p class="text-sm text-gray-400">${p.desc}</p>
+                    </div>
+                `).join('');
+                document.getElementById('projects-grid').innerHTML = html;
+            },
+
+            renderLinks: function() {
+                const html = this.state.data.links.map(l => `
+                    <a href="${l.url}" target="_blank" class="glass-panel p-4 flex items-center gap-3 hover:bg-white/10 transition">
+                        <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                            <img src="https://www.google.com/s2/favicons?domain=${l.url}" class="w-5 h-5 opacity-70">
+                        </div>
+                        <div class="overflow-hidden">
+                            <div class="font-bold text-sm truncate">${l.name}</div>
+                            <div class="text-xs text-gray-500 truncate">${l.desc}</div>
+                        </div>
+                    </a>
+                `).join('');
+                
+                // Add "Join" button
+                const joinHtml = `
+                    <div class="glass-panel p-4 flex items-center justify-center border-dashed border-gray-600 text-gray-500 cursor-pointer hover:text-white hover:border-white transition">
+                        <span class="text-xs">+ 申请友链</span>
+                    </div>
+                `;
+                document.getElementById('links-grid').innerHTML = html + joinHtml;
+            },
+
+            // --- Actions ---
+            switchTab: function(id) {
+                document.querySelectorAll('.tab-content').forEach(el => {
+                    el.classList.add('hidden');
+                    el.classList.remove('active');
+                });
+                document.getElementById(id).classList.remove('hidden');
+                document.getElementById(id).classList.add('active'); // for animation reset if needed
+                
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.getElementById('nav-'+id).classList.add('active');
+            },
+
+            openModal: function(id) { document.getElementById(id).classList.add('open'); },
+            closeModal: function(id) { document.getElementById(id).classList.remove('open'); },
+
+            setTheme: function(theme) {
+                this.state.theme = theme;
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('site_theme', theme);
+            },
+
+            setLang: function(lang) {
+                this.state.lang = lang;
+                localStorage.setItem('site_lang', lang);
+                this.updateText();
+            },
+
+            saveCloudConfig: function() {
+                const input = document.getElementById('firebase-config-input').value;
+                if(!input) return;
+                try {
+                    JSON.parse(input); // Validate JSON
+                    localStorage.setItem('firebase_config', input);
+                    alert("配置已保存！正在刷新...");
+                    location.reload();
+                } catch(e) {
+                    alert("JSON 格式错误，请检查。");
+                }
+            },
+
+            clearCloudConfig: function() {
+                localStorage.removeItem('firebase_config');
+                location.reload();
+            },
+
+            publishPost: async function() {
+                if(!this.state.dbConnected) {
+                    alert("请先在设置中连接 Firebase 云端，才能发布文章！(本地模式仅作演示)");
+                    return;
+                }
+                
+                const title = document.getElementById('post-title').value;
+                const cat = document.getElementById('post-cat').value;
+                const img = document.getElementById('post-img').value || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=500&q=60";
+                const desc = document.getElementById('post-content').value;
+
+                if(!title) return alert("Title is required");
+
+                const newPost = {
+                    title, cat, desc, img,
+                    date: new Date().toISOString().split('T')[0],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                try {
+                    await this.db.collection('posts').add(newPost);
+                    this.closeModal('write-modal');
+                    alert("发布成功！");
+                    this.loadCloudData(); // Reload
+                    // Clear inputs
+                    document.getElementById('post-title').value = "";
+                    document.getElementById('post-content').value = "";
+                } catch(e) {
+                    console.error(e);
+                    alert("发布失败：" + e.message);
+                }
+            }
+        };
+
+        // Boot
+        window.onload = () => app.init();
+
     </script>
 </body>
 </html>
